@@ -1,0 +1,2 @@
+select abbrev
+from teams
