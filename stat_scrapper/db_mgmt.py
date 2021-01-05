@@ -1,5 +1,6 @@
 import sqlite3
 import pandas as pd
+from schedule import get_schedule
 from boxscores import get_std_box_scores
 from rosters import get_roster
 from static_team_references import get_abbrevs
@@ -59,23 +60,17 @@ def create_teams_table(conn: sqlite3.Connection):
 
     conn.commit()
     
-    return    
-    
-def create_rosters_table(conn: sqlite3.Connection, year: str):
-    create_roster_tbl = QUERY_DIR.joinpath('create_roster_table.sql')
-    execute_query(create_roster_tbl, conn)
-    abbrev_query = QUERY_DIR.joinpath('get_all_abbrevs.sql')
-    abb_df = sql_to_df(abbrev_query, conn)
-    roster_df = pd.DataFrame()
-    for team in abb_df['abbrev']:
-        team_df = get_roster(team, year)
-        roster_df = roster_df.append(team_df)
-    roster_df.to_sql('roster', conn, if_exists='replace')
-    
-    conn.commit()
+    return 
+
+def create_schedule_table(conn: sqlite3.Connection, year: str):
+    create_teams_table(conn)
+    schedule_create = QUERY_DIR.joinpath('create_schedule_table.sql')
+    execute_query(schedule_create, conn)
+    sched_df = get_schedule(year)
+    sched_df.to_sql('schedule', conn, if_exists='replace')
     
     return
-
+    
 def create_agg_boxscores_table(conn: sqlite3.Connection, year: str):
     """
     Creates a boxscore table if not existing and inserts

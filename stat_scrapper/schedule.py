@@ -89,3 +89,5 @@ def get_schedule(year, abbrev=None):
     agg_df['Dates'] = pd.to_datetime(agg_df.Dates)
     
     return agg_df
+
+get_schedule('2021')
