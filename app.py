@@ -149,4 +149,4 @@ def update_player_graph(data, row_inds, table_data):
 
 # Main
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server()

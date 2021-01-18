@@ -101,7 +101,6 @@ def aggregate_table_data(boxscore_df):
     dfs_agg['VALUE'] = round((dfs_agg['SALARY'] / (dfs_agg['STD_DFS'] / dfs_agg['AVG_DFS'])) / 1000, 2)
     dfs_agg['VALUE'].fillna(0, inplace=True)
     dfs_agg = dfs_agg.replace(np.inf, 0)
-    dfs_agg.fillna(0, inplace=True)
     dfs_agg.sort_values(by='VALUE', ascending=False, inplace=True)
     dfs_agg = dfs_agg.merge(boxscore_df[['player', 'team_name']], on='player')
     dfs_agg.insert(1, 'Team', dfs_agg.pop('team_name'))
