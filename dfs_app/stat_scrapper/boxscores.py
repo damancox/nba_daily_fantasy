@@ -6,11 +6,11 @@ import numpy as np
 import os
 import datetime as dt
 import calendar
-from schedule import get_schedule
-from static_team_references import get_abbrevs
+from .schedule import get_schedule
+from .teams import get_abbrevs
 import numpy as np
 
-def get_std_box_scores(year, abbrev=None):
+def get_std_box_scores(conn, year, abbrev=None, append=False):
     """
     Pulls and aggregates boxscores of all games within a year or 
     of specified team. Pulls standard boxscore of both teams to aggregate
@@ -18,6 +18,14 @@ def get_std_box_scores(year, abbrev=None):
     its own unique id.
     """
     sched = get_schedule(year, abbrev)
+    if append:
+        append_q = """
+        select max(date) from boxscores
+        """
+        date = pd.read_sql(append_q, conn)
+        date_formatted = pd.to_datetime(date.values[0])[0]
+        sched = sched[sched.Dates > date_formatted]
+        
     prepend = 'https://www.basketball-reference.com'
     
     
@@ -32,8 +40,8 @@ def get_std_box_scores(year, abbrev=None):
         team_headings = soup.find_all('div', class_='section_heading')
 
         # getting names of teams tabled
-        team_1 = team_headings[3].text.strip()[:-6]
-        team_2 = team_headings[11].text.strip()[:-6]
+        team_1 = team_headings[3].text.strip()[:-6].strip()
+        team_2 = team_headings[11].text.strip()[:-6].strip()
         #handling for if OT changing sequence length
         ot = None
         if team_2 == '':
@@ -110,8 +118,35 @@ def get_std_box_scores(year, abbrev=None):
         
         master_df = master_df.append(agg_df)
         master_df = master_df[master_df.player != 'Team Totals']
-        
+        master_df.replace('', '0', inplace=True)
+        master_df.iloc[:, 2:-4] = master_df.iloc[: ,2:-4].astype(float)
+        # still need to id why mystery NA appear instead of just dropping.
+        master_df.dropna(inplace=True)
+
     return master_df
+
+def update_boxscores_table(conn, year, append=False):
+    abbrev_df = get_abbrevs()
+    abbrev_df.rename({'team': 'team_name'}, axis=1, inplace=True)
+    abbrevs = abbrev_df['abbrev']
+    agg_df = pd.DataFrame()
+    for team in abbrevs:
+        print(f'Retrieving: {team}')
+        team_df = get_std_box_scores(conn, year=year, abbrev=team, append=append)
+        agg_df = agg_df.append(team_df)
+    agg_df.drop_duplicates(inplace=True)
+    agg_df.fillna(0, inplace=True)
+    agg_df = agg_df.merge(abbrev_df, on='team_name')
+    if append:
+        agg_df.to_sql('boxscores', conn, if_exists='append', index=False)
+    else:
+        agg_df.to_sql('boxscores', conn, if_exists='replace', index=False)
+    refresh = pd.DataFrame([dt.date.today()], columns=['date'])
+    refresh.to_sql('refresh_log', conn, if_exists='replace')
+    print('Boxscores succesfully updated.')
+    
+    return
+    
 
 
     

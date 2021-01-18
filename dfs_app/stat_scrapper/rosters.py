@@ -2,8 +2,13 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import requests
 import os
-import static_team_references as ref
+import teams as ref
 from errors import TeamAbbrevError
+import sqlite3
+import db_utils
+from pathlib import Path
+
+QUERY_DIR = Path('sql')
 
 def get_roster(abbrev, year):
     """
@@ -17,6 +22,12 @@ def get_roster(abbrev, year):
     # converting to string if passed as int for adding to url
     if not isinstance(year, str):
         year = str(year)
+    if abbrev == 'BKN':
+        abbrev = 'BRK'
+    elif abbrev == 'CHA':
+        abbrev = 'CHO'
+    elif abbrev == 'PHX':
+        abbrev = 'PHO'
     # creating team specfic url to pull roster
     url = f'https://www.basketball-reference.com/teams/{abbrev}/{year}.html'
     #scraping and retr
@@ -40,3 +51,18 @@ def get_roster(abbrev, year):
     roster['abbrev'] = abbrev
     
     return roster
+
+def update_roster_table(conn: sqlite3.Connection, year: str):
+    """
+    Creates the roster table in the databse.
+    """
+    abbrevs = ref.get_abbrevs()['abbrev']
+    roster_df = pd.DataFrame()
+    for abbrev in abbrevs:
+        _temp = get_roster(abbrev, year)
+        _temp['team'] = abbrev
+        roster_df = roster_df.append(_temp)
+    roster_df.to_sql('rosters', conn, if_exists='replace')
+    print('Rosters succsesfully updated.')
+    
+    return

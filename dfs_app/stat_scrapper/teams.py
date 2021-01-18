@@ -31,5 +31,11 @@ def get_abbrevs():
         team_df =  team_df.append(append_dict, ignore_index=True)
     
     return team_df
-        
+
+def update_teams_table(conn):
+    abbrevs = get_abbrevs()
+    abbrevs.to_sql('teams', conn, if_exists='replace')
+    print('Teams succesfully udpated.')
+    
+    return
         

@@ -1,13 +1,13 @@
-import pandas as pd 
-from pathlib import Path
 import sqlite3
+import pandas as pd
+from pathlib import Path
+import pandas as pd 
+import time
 import os
 
+QUERY_DIR = Path('sql')
+
 def sql_to_df(sql_path: str, conn: sqlite3.Connection, params: dict=None):
-    """
-    Takes the path to a sql file and the db connection and executes the
-    provided query returning a dataframe.
-    """
     with open(sql_path, 'r') as q:    
         query = q.read()
     if params:
@@ -18,9 +18,6 @@ def sql_to_df(sql_path: str, conn: sqlite3.Connection, params: dict=None):
     return df
 
 def execute_query(sql_path: str, conn=sqlite3.Connection):
-    """
-    Executes a provided query from a provided file path and connection.
-    """
     with open(sql_path, 'r') as q:
         query = q.read()
     try:
@@ -41,3 +38,6 @@ def create_connection(db_name: str) -> sqlite3.Connection:
     except sqlite3.Error as e:
         print(e)      
         return
+    
+    
+    

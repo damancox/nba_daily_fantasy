@@ -10,7 +10,7 @@ import numpy as np
 import os
 import datetime as dt
 import calendar
-from static_team_references import get_abbrevs
+from .teams import get_abbrevs
 
 def get_schedule(year, abbrev=None):
     """
@@ -90,4 +90,12 @@ def get_schedule(year, abbrev=None):
     
     return agg_df
 
-get_schedule('2021')
+def update_schedule_table(conn, year):
+    sched_df = get_schedule(year)
+    sched_df.columns = ['Dates', 'Start (ET)', 'Visitor/Neutral', 'PTS_V', 
+                        'Home/Neutral', 'PTS_H', 'Box_Score', 'OT?', 'Attend.', 
+                        'Notes']
+    sched_df.to_sql('schedule', conn, if_exists='replace')
+    print('Schedule has been updated.')
+    
+    return
