@@ -2,7 +2,6 @@
 # Looks for back to backs or possibly long road trips
 # Something to handle possible load management
 
-
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
