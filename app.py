@@ -103,24 +103,22 @@ app.layout = html.Div([
 def get_data(date):
     with db.create_connection(database_dir) as conn:
         df = cb.get_today_player_stats(conn, date=date)
-        
         return df.to_dict('records')
 
 @app.callback(
     [Output('player_table', 'columns'),
      Output('player_table', 'data'),
-     Output('player_table', 'row_selectable'),
-     Output('game-cnt-cntr', 'children')],
+     Output('player_table', 'row_selectable')],
     [Input('data-store', 'data')]
 )
 def table_data(data):
     df = pd.DataFrame.from_dict(data)
     dfs_df = cb.aggregate_table_data(df)
+    print(dfs_df)
     cols = [{"name": i, "id": i} for i in dfs_df.columns]
-    game_cnt = len(dfs_df.Team.unique()) / 2
     table_data = dfs_df.to_dict('records')
     
-    return cols, table_data, "multi", game_cnt
+    return cols, table_data, "multi",
     
 @app.callback(
     Output('player-graph', 'figure'),
@@ -133,6 +131,7 @@ def update_player_graph(data, row_inds, table_data):
         raise PreventUpdate
     else:
         box_df = pd.DataFrame.from_dict(data)
+        print(box_df)
         boxscores = cb.calculate_dfs_scores(box_df)
         tbl_df = pd.DataFrame(table_data)
         idx = list(row_inds)
@@ -147,14 +146,6 @@ def update_player_graph(data, row_inds, table_data):
         fig.update_traces(mode='markers+lines')
         
         return fig
-    
-@app.callback(
-    Output('refresh-date', 'children'),
-    [Input('date-picker', 'date')]
-)
-def get_string_date(date):
-    string = f"# of games for {date}:"
-    return string
 
 # Main
 if __name__ == "__main__":
