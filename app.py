@@ -140,9 +140,6 @@ def update_player_graph(data, row_inds, table_data):
         graph_df = boxscores[boxscores['player'].isin(player_list)]
         graph_df.sort_values(by='date', inplace=True)
         graph_df.set_index('date', inplace=True)
-        
-        print(graph_df)
-
         fig = px.line(graph_df, y='TOT_DFS', color='player', 
                       title='Daily Fantasy Score Totals')
         fig.update_xaxes(title_text='Date')
