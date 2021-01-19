@@ -92,6 +92,10 @@ def merge_salaries(df):
     return merge_df
 
 def aggregate_table_data(boxscore_df):
+    # adding below line in so names don't drop with acceents, needs to be 
+    # handled better as this is duplicated code found the the merge_salaries
+    # function.
+    boxscore_df['player'] = boxscore_df['player'].apply(lambda x: unidecode.unidecode(x))
     dfs_df = calculate_dfs_scores(boxscore_df)
     dfs_avg = calculate_avg_dfs_scores(dfs_df)
     dfs_std = calcualte_std_dfs_scores(dfs_df).fillna(0)
