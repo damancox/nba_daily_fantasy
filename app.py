@@ -14,6 +14,7 @@ import stat
 from pathlib import Path
 import callbacks as cb
 import stat_scrapper.db_utils as db
+import unidecode
 
 import stat_scrapper.boxscores as b
 
@@ -103,6 +104,8 @@ app.layout = html.Div([
 def get_data(date):
     with db.create_connection(database_dir) as conn:
         df = cb.get_today_player_stats(conn, date=date)
+        # removes player accents from data - duplicates code in callback.py
+        df['player'] = df['player'].apply(lambda x: unidecode.unidecode(x))
         return df.to_dict('records')
 
 @app.callback(
