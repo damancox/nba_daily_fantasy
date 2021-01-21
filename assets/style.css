@@ -6,8 +6,15 @@ body {
 
 .header {
     background-color: #222222;
-    height: 165px;
+    height: 190px;
     padding: 16px 0 0 0;
+}
+
+.code-string {
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #079A82;
+    margin-left: 20px;
 }
 
 .header-emoji {
@@ -96,4 +103,12 @@ body {
 .row {
     margin-left:-5px;
     margin-right:-5px;
+}
+
+.button {
+    background-color: #079A82;
+    color: white;
+    border: 1.5px;
+    text-align: center;
+    margin-left: 20px;
 }

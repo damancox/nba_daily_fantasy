@@ -20,6 +20,7 @@ import layouts
 import stat_scrapper.boxscores as b
 
 database_dir = Path('nba_dfs.db')
+code_url = 'https://github.com/damancox/nba_daily_fantasy'
 
 with db.create_connection('nba_dfs.db') as conn:
     refresh_q = """select max(date) from refresh_log"""
@@ -37,6 +38,8 @@ app.layout = html.Div([
     
     html.Div([
         html.Div([ # Header
+            html.A(dbc.Button('Code Repository', className='button'), 
+                   href=code_url, target="_blank"),
             html.H1("NBA Daily Fantasy Viewer", className="header-title")
         ], className="header"),
         
@@ -177,4 +180,4 @@ def update_player_graph(data, row_inds, table_data):
 
 # Main
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server()
