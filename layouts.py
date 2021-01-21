@@ -41,7 +41,7 @@ player_table = dash_table.DataTable(id='player_table',
                                     fixed_rows={'headers': True, 'data': 0},
                                     derived_virtual_selected_rows=[],
                                     style_as_list_view=True,
-                                    style_cell={'padding': '5px'},
+                                    style_cell={'padding': '10px'},
                                     style_cell_conditional=(
                                         [{'if': {'column_id': c},
                                          'textAlign': 'left'
@@ -52,7 +52,7 @@ player_table = dash_table.DataTable(id='player_table',
                                          } for c in ['player']]
                                         +
                                         [{'if': {'column_id': c},
-                                          'width': '31px'
+                                          'width': '35px'
                                          } for c in ['Team']]
                                         ),
                                     style_data_conditional=[
