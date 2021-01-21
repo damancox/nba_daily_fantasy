@@ -142,19 +142,19 @@ def aggregate_table_data(boxscore_df):
     dfs_agg = dfs_avg.merge(dfs_std[['player', 'STD_DFS']], on='player')
     dfs_agg = merge_salaries(dfs_agg)
     dfs_agg.sort_values(by='AVG_DFS', ascending=False, inplace=True)
-    dfs_agg = dfs_agg.merge(boxscore_df[['player', 'team_name']], on='player')
-    dfs_agg.insert(1, 'Team', dfs_agg.pop('team_name'))
+    dfs_agg = dfs_agg.merge(boxscore_df[['player', 'abbrev']], on='player')
+    dfs_agg.insert(1, 'Team', dfs_agg.pop('abbrev'))
     dfs_agg.drop_duplicates(inplace=True)
     
-    table_df = dfs_agg[['player', 'Team', 'MP', 'AVG_DFS', 'STD_DFS', 'SALARY']]
+    table_df = dfs_agg[['player', 'Team', 'MP', 'AVG_DFS', 'SALARY']]
     table_df['MULTI'] = round(table_df.AVG_DFS / (table_df.SALARY / 1000), 2)
     table_df['FPPM'] = round(table_df['AVG_DFS'] / table_df['MP'], 2)
     table_df.fillna(0, inplace=True)
     
     # re-ordering table
     table_df = (table_df[['player', 'Team', 'MP', 'AVG_DFS', 'FPPM', 
-                         'STD_DFS', 'SALARY', 'MULTI']]
-                .rename({'AVG_DFS': 'AVG', 'STD_DFS': 'STD'}, axis=1))
+                         'SALARY', 'MULTI']]
+                .rename({'AVG_DFS': 'AVG'}, axis=1))
     
     return table_df
 
@@ -187,7 +187,7 @@ def calculate_team_dfs_avg(df):
               .reset_index()
               .dropna()
               .sort_values(by='TOT_DFS',ascending=False)
-              .rename({'TOT_DFS': 'Average Score'}, axis=1)
+              .rename({'TOT_DFS': 'Average DFS'}, axis=1)
               .round(2))
     
     return avg_df
