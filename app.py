@@ -15,9 +15,7 @@ from pathlib import Path
 import callbacks as cb
 import stat_scrapper.db_utils as db
 import unidecode
-import layouts
-
-import stat_scrapper.boxscores as b
+import layouts  
 
 database_dir = Path('nba_dfs.db')
 code_url = 'https://github.com/damancox/nba_daily_fantasy'
