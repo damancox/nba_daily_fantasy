@@ -112,3 +112,8 @@ body {
     text-align: center;
     margin-left: 20px;
 }
+
+.stat-radio {
+    flex: 2;
+  }
+  

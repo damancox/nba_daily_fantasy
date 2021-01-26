@@ -85,15 +85,21 @@ app.layout = html.Div([
             html.H5('Player DFS Totals per Game'),
             html.Div([
                 html.Div([
-                    dcc.Dropdown(id='stat-drop',
-                                 options=[{'label': i, 'value': i} for i in ['MP', 'DFS']],
-                                 value='DFS'),
-                    dcc.RadioItems(id='stat-level',
-                    options=[{'label': i, 'value': i} for i in ['Per Game', '3 Game Avg']],
-                    value='Per Game')
-                ], className='card'),
+                    html.Div([
+                        dcc.Dropdown(id='stat-drop',
+                                    options=[{'label': i, 'value': i} 
+                                            for i in ['MP', 'DFS']],
+                                    value='DFS'),
+                    ], style={'width': '30%', 'display': 'inline-block'}),
+                    html.Div([
+                        dcc.RadioItems(id='stat-level',
+                        options=[{'label': i, 'value': i} 
+                                for i in ['Per Game', '3 Game Avg']],
+                        value='Per Game')
+                    ], style={'width': '70%', 'float': 'right', 'display': 'inline-block'}),
+                ]),
                 dcc.Graph(id='player-graph'),
-            ], className='card')
+            ])
             
         ], className='wrapper')
         
