@@ -84,6 +84,14 @@ app.layout = html.Div([
         html.Div([
             html.H5('Player DFS Totals per Game'),
             html.Div([
+                html.Div([
+                    dcc.Dropdown(id='stat-drop',
+                                 options=[{'label': i, 'value': i} for i in ['MP', 'DFS']],
+                                 value='DFS'),
+                    dcc.RadioItems(id='stat-level',
+                    options=[{'label': i, 'value': i} for i in ['Per Game', '3 Game Avg']],
+                    value='Per Game')
+                ], className='card'),
                 dcc.Graph(id='player-graph'),
             ], className='card')
             
@@ -153,14 +161,15 @@ def update_team_dfs_table(data):
     Output('player-graph', 'figure'),
     [Input('data-store', 'data'),
      Input('player_table', 'derived_virtual_selected_rows'),
-     Input('player_table', 'derived_virtual_data')]
+     Input('player_table', 'derived_virtual_data'),
+     Input('stat-drop', 'value'),
+     Input('stat-level', 'value')]
 )
-def update_player_graph(data, row_inds, table_data):
+def update_player_graph(data, row_inds, table_data, stat, level):
     if len(row_inds) == 0:
         raise PreventUpdate
     else:
         box_df = pd.DataFrame.from_dict(data)
-        print(box_df)
         boxscores = cb.calculate_player_dfs_scores(box_df)
         tbl_df = pd.DataFrame(table_data)
         idx = list(row_inds)
@@ -168,10 +177,22 @@ def update_player_graph(data, row_inds, table_data):
         graph_df = boxscores[boxscores['player'].isin(player_list)]
         graph_df.sort_values(by='date', inplace=True)
         graph_df.set_index('date', inplace=True)
-        fig = px.line(graph_df, y='TOT_DFS', color='player', 
+        graph_df = cb.reformat_minutes_played(graph_df)
+        print(graph_df)
+        if stat == 'DFS':
+            y_axis = 'TOT_DFS'
+        elif stat == 'MP':
+            y_axis = 'MP'
+        if level == 'Per Game':
+            pass
+        elif level == '3 Game Avg':
+            graph_df = (graph_df.groupby('player')[y_axis].rolling(3).mean()
+                        .reset_index()
+                        .set_index('date'))
+        fig = px.line(graph_df, y=y_axis, color='player', 
                       title='Daily Fantasy Score Totals')
         fig.update_xaxes(title_text='Date')
-        fig.update_yaxes(title_text='DFS Score')
+        fig.update_yaxes(title_text=stat)
         fig.update_traces(mode='markers+lines')
         
         return fig
