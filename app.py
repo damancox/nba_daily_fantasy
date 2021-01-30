@@ -15,7 +15,8 @@ from pathlib import Path
 import callbacks as cb
 import stat_scrapper.db_utils as db
 import unidecode
-import layouts  
+import layouts
+from stat_scrapper.teams import get_abbrevs
 
 database_dir = Path('nba_dfs.db')
 code_url = 'https://github.com/damancox/nba_daily_fantasy'
@@ -33,6 +34,7 @@ server = app.server
 app.layout = html.Div([
     
     dcc.Store(id='data-store'),
+    dcc.Store(id='team-dfs'),
     
     html.Div([
         html.Div([ # Header
@@ -56,7 +58,15 @@ app.layout = html.Div([
             ])
         ], className='menu'),
         html.Div([ # tables holder
-                  
+            
+            html.Div([
+                
+                html.H5('Scheduled Games'),
+                html.Div([
+                    layouts.team_table[0]
+                ], className='card'),
+            ], className='team-wrapper'),
+        
             html.Div([ # player_table
                 
                 html.H5('Player Daily Fantasy Metrics'),
@@ -65,19 +75,6 @@ app.layout = html.Div([
                 ], className='card'),
                 
             ], className='table-wrapper'),
-            
-            html.Div([
-                
-                html.H5('Scheduled Games'),
-                html.Div([
-                    layouts.team_table[0]
-                ], className='card'),
-                
-                html.H5('Team Average DFS Score'),
-                html.Div([
-                    layouts.team_dfs_table[0]
-                ], className='card'),
-            ], className='team-wrapper'),
             
         ], className='row'),
         
@@ -121,22 +118,35 @@ def get_data(date):
     [Output('player_table', 'columns'),
      Output('player_table', 'data'),
      Output('player_table', 'row_selectable')],
-    [Input('data-store', 'data')]
+    [Input('data-store', 'data'),
+     Input('team-dfs', 'data')]
 )
-def player_data(data):
+def player_data(data, dfs):
     df = pd.DataFrame.from_dict(data)
     dfs_df = cb.aggregate_table_data(df)
+
+    df2 = pd.DataFrame.from_dict(dfs)
+    t1 = df2.iloc[:, 0:2]
+    t1.rename({'Away': 'Team', 'Awy Avg': 'Avg'}, axis=1, inplace=True)
+    t2 = df2.iloc[:, 2:4]
+    t2.rename({'Home': 'Team', 'Hme Avg': 'Avg'}, axis=1, inplace=True)
+    comp_df = pd.concat([t1, t2], axis=0)
+    
+    dfs_df = dfs_df.merge(comp_df, on='Team', how='left')
+    dfs_df['Pct Team'] = round(dfs_df['AVG'] / dfs_df['Avg'], 2)
+    dfs_df.drop('Avg', inplace=True, axis=1)
     cols = [{"name": i, "id": i} for i in dfs_df.columns]
     table_data = dfs_df.to_dict('records')
-    
     return cols, table_data, "multi",
 
 @app.callback(
     [Output('team_table', 'columns'),
-     Output('team_table', 'data')],
-    [Input('date-picker', 'date')]
+     Output('team_table', 'data'),
+     Output('team-dfs', 'data')],
+    [Input('date-picker', 'date'),
+     Input('data-store', 'data')]
 )
-def update_team_table(date):
+def update_team_table(date, data):
     q = """select date(Dates) as Date, 
            "Visitor/Neutral", 
            "Home/Neutral" 
@@ -144,11 +154,23 @@ def update_team_table(date):
     with db.create_connection('nba_dfs.db') as conn:
         sched = pd.read_sql(q, conn)
     
-    df = sched[sched.Date == date]
-    cols = [{"name": i, "id": i} for i in df.columns]
-    data = df.to_dict('records')
+    df = sched[sched.Date == date].drop('Date', axis=1)
+    col_1 = df[['Visitor/Neutral']].rename({'Visitor/Neutral': 'Team'}, axis=1)
+    col_2 = df[['Home/Neutral']].rename({'Home/Neutral': 'Team'}, axis=1)
+    box_df = pd.DataFrame.from_dict(data)
+    dfs_df = cb.aggregate_team_dfs(box_df)
+    abb = get_abbrevs().rename({'team_name': 'Team'}, axis=1)
+    t1 = abb.merge(col_1, on='Team', how='right').merge(dfs_df, on='Team', how='left').drop('Team', axis=1)
+    t2 = abb.merge(col_2, on='Team', how='right').merge(dfs_df, on='Team', how='left').drop('Team', axis=1)
+    t1.columns = ['Away', 'Awy Avg']
+    t2.columns = ['Home', 'Hme Avg']
+    team_df = pd.concat([t1, t2], axis=1)
+    team_df['ABS_Diff'] = round(abs(team_df['Awy Avg'] - team_df['Hme Avg']), 1)
+    team_df.sort_values(by='ABS_Diff', inplace=True, ascending=False)
+    cols = [{"name": i, "id": i} for i in team_df.columns]
+    data = team_df.to_dict('records')
     
-    return cols, data
+    return cols, data, data
 
 @app.callback(
     [Output('team_dfs_table', 'columns'),
