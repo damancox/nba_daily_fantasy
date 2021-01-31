@@ -48,12 +48,8 @@ player_table = dash_table.DataTable(id='player_table',
                                          } for c in ['player', 'Team']]
                                         +
                                         [{'if': {'column_id': c},
-                                          'width': '50px'
-                                         } for c in ['player']]
-                                        +
-                                        [{'if': {'column_id': c},
-                                          'width': '35px'
-                                         } for c in ['Team']]
+                                          'width': '85px'
+                                         } for c in ['Pct Team']]
                                         ),
                                     style_data_conditional=[
                                         {'if': {'row_index': 'odd'},

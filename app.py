@@ -73,6 +73,10 @@ app.layout = html.Div([
                 html.Div([
                     layouts.player_table[0]
                 ], className='card'),
+                html.Div([
+                    dbc.Button('Clear Selections', id='clear-button', className='button')
+                ], style={'width': '30%', 'float': 'right', 'display': 'inline-block',
+                          'margin-top': '1px'}),
                 
             ], className='table-wrapper'),
             
@@ -93,7 +97,8 @@ app.layout = html.Div([
                         options=[{'label': i, 'value': i} 
                                 for i in ['Per Game', '3 Game Avg']],
                         value='Per Game')
-                    ], style={'width': '70%', 'float': 'right', 'display': 'inline-block'}),
+                    ], style={'width': '30%', 'float': 'right', 
+                              'display': 'inline-block'}),
                 ]),
                 dcc.Graph(id='player-graph'),
             ])
@@ -137,7 +142,8 @@ def player_data(data, dfs):
     dfs_df.drop('Avg', inplace=True, axis=1)
     cols = [{"name": i, "id": i} for i in dfs_df.columns]
     table_data = dfs_df.to_dict('records')
-    return cols, table_data, "multi",
+    
+    return cols, table_data, "multi"
 
 @app.callback(
     [Output('team_table', 'columns'),
@@ -160,12 +166,17 @@ def update_team_table(date, data):
     box_df = pd.DataFrame.from_dict(data)
     dfs_df = cb.aggregate_team_dfs(box_df)
     abb = get_abbrevs().rename({'team_name': 'Team'}, axis=1)
-    t1 = abb.merge(col_1, on='Team', how='right').merge(dfs_df, on='Team', how='left').drop('Team', axis=1)
-    t2 = abb.merge(col_2, on='Team', how='right').merge(dfs_df, on='Team', how='left').drop('Team', axis=1)
+    t1 = (abb.merge(col_1, on='Team', how='right')
+          .merge(dfs_df, on='Team', how='left')
+          .drop('Team', axis=1))
+    t2 = (abb.merge(col_2, on='Team', how='right')
+          .merge(dfs_df, on='Team', how='left')
+          .drop('Team', axis=1))
     t1.columns = ['Away', 'Awy Avg']
     t2.columns = ['Home', 'Hme Avg']
     team_df = pd.concat([t1, t2], axis=1)
-    team_df['ABS_Diff'] = round(abs(team_df['Awy Avg'] - team_df['Hme Avg']), 1)
+    team_df['ABS_Diff'] = round(abs(team_df['Awy Avg'] - team_df['Hme Avg']), 
+                                1)
     team_df.sort_values(by='ABS_Diff', inplace=True, ascending=False)
     cols = [{"name": i, "id": i} for i in team_df.columns]
     data = team_df.to_dict('records')
@@ -225,6 +236,17 @@ def update_player_graph(data, row_inds, table_data, stat, level):
         
         return fig
 
+@app.callback(
+    Output('player_table', 'selected_rows'),
+    [Input('clear-button', 'n_clicks')]
+)
+def unselect_rows(n_clicks):
+    if not n_clicks:
+        raise PreventUpdate
+    else:
+        row_inds = []
+        return row_inds
+
 # Main
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=False)
